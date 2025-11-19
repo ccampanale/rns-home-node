@@ -1,14 +1,23 @@
 FROM python:3.11-slim
 
-# Install dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+# Workaround for APT cache issues in Debian Trixie
+RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+# Install dependencies in separate steps to isolate issues
+RUN apt-get update
+
+RUN apt-get install -y --no-install-recommends \
     git \
     build-essential \
-    i2pd \
-    udev \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    udev
+
+# Install i2pd (may not be available on ARM, so try separately)
+RUN apt-get install -y --no-install-recommends i2pd || echo "i2pd not available, will need manual installation"
+
+# Cleanup
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* || true
 
 # Install Reticulum and related packages
 RUN pip install --no-cache-dir \
