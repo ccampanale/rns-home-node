@@ -1,0 +1,52 @@
+FROM python:3.11-slim
+
+# Workaround for APT cache issues in Debian Trixie
+RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+# Install dependencies in separate steps to isolate issues
+RUN apt-get update
+
+RUN apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    libffi-dev \
+    udev
+
+# Install i2pd (may not be available on ARM, so try separately)
+RUN apt-get install -y --no-install-recommends i2pd || echo "i2pd not available, will need manual installation"
+
+# Cleanup
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* || true
+
+# Install Reticulum and related packages
+RUN pip install --no-cache-dir \
+    rns \
+    rnsh \
+    nomadnet \
+    lxmf
+
+# Create reticulum user and necessary directories
+RUN useradd -m -s /bin/bash reticulum && \
+    usermod -a -G dialout reticulum && \
+    mkdir -p /home/reticulum/.reticulum && \
+    chown -R reticulum:reticulum /home/reticulum
+
+# Copy configuration files (these will be mounted as volumes)
+VOLUME ["/home/reticulum/.reticulum", "/var/lib/i2pd"]
+
+# Expose ports
+# 4242 for TCP interface
+# 7656 for I2P SAM API (if needed)
+EXPOSE 4242 7656
+
+# Switch to reticulum user
+USER reticulum
+WORKDIR /home/reticulum
+
+# Start script will be created separately
+COPY --chown=reticulum:reticulum start.sh /home/reticulum/
+RUN chmod +x /home/reticulum/start.sh
+
+CMD ["/home/reticulum/start.sh"]

@@ -24,6 +24,8 @@ ls -l /dev/serial/by-id/
 
 ### 2. Update docker-compose.yml
 
+Locate the appropriate `Dockerfile.<platform>` for your platform and rename it to `Dockerfile` OR edit `docker-compose.yml` and update the `build` value to target the correct platform specific file.
+
 Edit `docker-compose.yml` and update the device mapping with your actual device ID:
 
 ```yaml

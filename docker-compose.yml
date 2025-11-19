@@ -1,5 +1,6 @@
 services:
   reticulum:
+    # Locate the correct Dockerfile for your platform and rename to Dockerfile
     build: .
     container_name: reticulum-node
     restart: unless-stopped
@@ -12,7 +13,7 @@ services:
     devices:
       # Use by-id for stable device naming
       # Find your device with: ls -l /dev/serial/by-id/
-      - "/dev/serial/by-id/usb-Heltec_LoRa32_V3-if00:/dev/ttyUSB0"
+      - "/dev/serial/by-id/usb-Heltec_LoRa32_V3-if00-port0:/dev/ttyUSB0"
       # Alternatively, map all USB devices (less secure):
       # - "/dev/ttyUSB0:/dev/ttyUSB0"
     
