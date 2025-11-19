@@ -1,12 +1,14 @@
 FROM python:3.11-slim
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     git \
     build-essential \
     i2pd \
     udev \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Reticulum and related packages
 RUN pip install --no-cache-dir \
