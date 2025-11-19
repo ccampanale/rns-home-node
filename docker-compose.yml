@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  reticulum:
+    build: .
+    container_name: reticulum-node
+    restart: unless-stopped
+    
+    # Network mode host for easier interface discovery
+    # Alternative: use bridge mode and map specific ports
+    network_mode: host
+    
+    # Map serial devices for RNode
+    devices:
+      # Use by-id for stable device naming
+      # Find your device with: ls -l /dev/serial/by-id/
+      - "/dev/serial/by-id/usb-Heltec_LoRa32_V3-if00:/dev/ttyUSB0"
+      # Alternatively, map all USB devices (less secure):
+      # - "/dev/ttyUSB0:/dev/ttyUSB0"
+    
+    # Mount volumes for persistent configuration and data
+    volumes:
+      - ./config:/home/reticulum/.reticulum
+      - ./i2pd_data:/var/lib/i2pd
+      - ./logs:/home/reticulum/logs
+    
+    # Environment variables
+    environment:
+      - TZ=America/Chicago
+      - RNS_LOGLEVEL=4  # 0=critical, 1=error, 2=warning, 3=notice, 4=info, 5=verbose, 6=debug
+    
+    # Capabilities needed for network operations
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    
+    # Optional: limit resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+# Optional: separate I2P service if you want it independent
+  i2pd:
+    image: purplei2p/i2pd:latest
+    container_name: i2pd
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./i2pd_data:/home/i2pd/data
+    environment:
+      - ENABLE_IPV6=false
