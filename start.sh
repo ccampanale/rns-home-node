@@ -20,7 +20,7 @@ done
 if [ ! -e "$DEVICE" ]; then
     echo "WARNING: $DEVICE not found after $MAX_WAIT seconds"
     echo "LoRa interface will not be available"
-elsemk
+else
     echo "Serial device $DEVICE found"
 fi
 
@@ -105,5 +105,4 @@ echo "Starting Reticulum..."
 echo ""
 
 # Use rnsd (Reticulum Network Stack Daemon)
-# Pass the config directory, not the config file
-exec rnsd --config /home/reticulum/.reticulum
+exec rnsd --service --config /home/reticulum/.reticulum
