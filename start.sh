@@ -20,7 +20,7 @@ done
 if [ ! -e "$DEVICE" ]; then
     echo "WARNING: $DEVICE not found after $MAX_WAIT seconds"
     echo "LoRa interface will not be available"
-else
+elsemk
     echo "Serial device $DEVICE found"
 fi
 
@@ -33,7 +33,7 @@ if [ ! -f "/home/reticulum/.reticulum/config" ]; then
 
 [reticulum]
 enable_transport = yes
-share_instance = yes
+share_instance = no
 shared_instance_port = 37428
 instance_control_port = 37429
 
@@ -91,17 +91,19 @@ echo "Config location: /home/reticulum/.reticulum/config"
 echo "Log level: ${RNS_LOGLEVEL:-4}"
 echo ""
 
-# Start I2P daemon if configured (run in background)
-if grep -q "type = I2PInterface" /home/reticulum/.reticulum/config && \
-   grep -q "enabled = yes" /home/reticulum/.reticulum/config; then
-    echo "I2P interface detected in config, starting i2pd..."
-    i2pd --daemon --conf=/var/lib/i2pd/i2pd.conf &
-    sleep 5
-fi
+# Clean up any stale lock files from previous runs
+echo "Cleaning up stale lock files..."
+rm -f /home/reticulum/.reticulum/.lock
+rm -f /home/reticulum/.reticulum/storage/.lock
+rm -f /home/reticulum/.reticulum/.shared_instance_lock
+
+# Note: i2pd runs in a separate container (see docker-compose.yml)
+# No need to start it here
 
 # Start Reticulum
 echo "Starting Reticulum..."
 echo ""
 
 # Use rnsd (Reticulum Network Stack Daemon)
-exec rnsd --config /home/reticulum/.reticulum/config
+# Pass the config directory, not the config file
+exec rnsd --config /home/reticulum/.reticulum

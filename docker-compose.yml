@@ -8,6 +8,9 @@ services:
     # Network mode host for easier interface discovery
     # Alternative: use bridge mode and map specific ports
     network_mode: host
+
+    # Note: Running as container's reticulum user (defined in Dockerfile)
+    # Removed user override to avoid threading issues on Raspberry Pi
     
     # Map serial devices for RNode
     devices:
@@ -19,8 +22,7 @@ services:
     
     # Mount volumes for persistent configuration and data
     volumes:
-      - ./config:/home/reticulum/.reticulum
-      - ./i2pd_data:/var/lib/i2pd
+      - ./reticulum_config:/home/reticulum/.reticulum
       - ./logs:/home/reticulum/logs
     
     # Environment variables
@@ -33,15 +35,8 @@ services:
       - NET_ADMIN
       - NET_RAW
     
-    # Optional: limit resources
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 256M
+    # Run privileged to avoid threading issues on Raspberry Pi
+    privileged: true
 
 # Optional: separate I2P service if you want it independent
   i2pd:
@@ -49,6 +44,7 @@ services:
     container_name: i2pd
     restart: unless-stopped
     network_mode: host
+    user: "1000:1000"  # Run as host user to avoid permission issues
     volumes:
       - ./i2pd_data:/home/i2pd/data
     environment:
